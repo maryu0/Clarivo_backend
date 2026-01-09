@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
 
 const userSchema = new mongoose.Schema(
   {
@@ -19,6 +20,12 @@ const userSchema = new mongoose.Schema(
         "Please provide a valid email address",
       ],
     },
+    password: {
+      type: String,
+      required: [true, "Password is required"],
+      minlength: [6, "Password must be at least 6 characters"],
+      select: false, // Don't include password in queries by default
+    },
     preferredLanguage: {
       type: String,
       default: "en-US",
@@ -33,9 +40,20 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-// Indexes for better query performance
-userSchema.index({ email: 1 });
-userSchema.index({ createdAt: -1 });
+// Hash password before saving
+userSchema.pre("save", async function () {
+  if (!this.isModified("password")) {
+    return;
+  }
+
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+});
+
+// Instance method to compare passwords
+userSchema.methods.comparePassword = async function (candidatePassword) {
+  return await bcrypt.compare(candidatePassword, this.password);
+};
 
 // Instance method to get user's public profile
 userSchema.methods.toPublicProfile = function () {
