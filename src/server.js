@@ -25,8 +25,8 @@ app.use(
     credentials: true,
   })
 );
-app.use(express.json()); // Parse JSON bodies
-app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
+app.use(express.json({ limit: "50mb" })); // Parse JSON bodies with 50mb limit for audio
+app.use(express.urlencoded({ extended: true, limit: "50mb" })); // Parse URL-encoded bodies
 
 // Health check route
 app.get("/health", (req, res) => {
